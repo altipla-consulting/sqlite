@@ -204,3 +204,76 @@ func TestGenericGetMultiNil(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, results, 0)
 }
+
+func TestGenericDeleteKey(t *testing.T) {
+	ctx := context.Background()
+	db := connectDB(t)
+	defer db.Close()
+
+	repo := NewRepoGeneric[testModel](db, RepoConfig{
+		Table:      "TestModels",
+		PrimaryKey: "Name",
+	})
+
+	require.NoError(t, repo.Put(ctx, &testModel{Name: "foo-name", Value: "foo-value"}))
+
+	require.NoError(t, repo.DeleteKey(ctx, "foo-name"))
+
+	n, err := repo.Count(ctx)
+	require.NoError(t, err)
+	require.EqualValues(t, n, 0)
+}
+
+func TestGenericDeleteKeyNotExists(t *testing.T) {
+	ctx := context.Background()
+	db := connectDB(t)
+	defer db.Close()
+
+	repo := NewRepoGeneric[testModel](db, RepoConfig{
+		Table:      "TestModels",
+		PrimaryKey: "Name",
+	})
+
+	require.NoError(t, repo.DeleteKey(ctx, "foo-name"))
+
+	n, err := repo.Count(ctx)
+	require.NoError(t, err)
+	require.EqualValues(t, n, 0)
+}
+
+func TestGenericDelete(t *testing.T) {
+	ctx := context.Background()
+	db := connectDB(t)
+	defer db.Close()
+
+	repo := NewRepoGeneric[testModel](db, RepoConfig{
+		Table:      "TestModels",
+		PrimaryKey: "Name",
+	})
+
+	model := &testModel{Name: "foo-name", Value: "foo-value"}
+	require.NoError(t, repo.Put(ctx, model))
+
+	require.NoError(t, repo.Delete(ctx, model))
+
+	n, err := repo.Count(ctx)
+	require.NoError(t, err)
+	require.EqualValues(t, n, 0)
+}
+
+func TestGenericDeleteDoubleNotExists(t *testing.T) {
+	ctx := context.Background()
+	db := connectDB(t)
+	defer db.Close()
+
+	repo := NewRepoGeneric[testModel](db, RepoConfig{
+		Table:      "TestModels",
+		PrimaryKey: "Name",
+	})
+
+	model := &testModel{Name: "foo-name", Value: "foo-value"}
+	require.NoError(t, repo.Put(ctx, model))
+
+	require.NoError(t, repo.Delete(ctx, model))
+	require.NoError(t, repo.Delete(ctx, model))
+}

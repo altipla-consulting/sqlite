@@ -65,7 +65,10 @@ func (repo *RepoGeneric[T]) Get(ctx context.Context, key string) (*T, error) {
 	cols, _ := listCols(repo.DB, model)
 	q := fmt.Sprintf("SELECT %s FROM %s WHERE %s = ?", strings.Join(cols, ","), repo.cnf.Table, repo.cnf.PrimaryKey)
 	if err := repo.DB.GetContext(ctx, &model, q, key); err != nil {
-		log.WithField("query", q).Debug("SQL query")
+		log.WithFields(log.Fields{
+			"query": q,
+			"key":   key,
+		}).Debug("SQL query: Get")
 		return nil, fmt.Errorf("cannot execute query: %w", err)
 	}
 	return &model, nil
@@ -141,4 +144,36 @@ func (repo *RepoGeneric[T]) QueryMap(ctx context.Context, query string, args ...
 	}
 
 	return keyed, nil
+}
+
+func (repo *RepoGeneric[T]) DeleteKey(ctx context.Context, key string) error {
+	q := fmt.Sprintf("DELETE FROM %s WHERE %s = ?", repo.cnf.Table, repo.cnf.PrimaryKey)
+	if _, err := repo.DB.ExecContext(ctx, q, key); err != nil {
+		log.WithFields(log.Fields{
+			"query": q,
+			"key":   key,
+		}).Debug("SQL query: DeleteKey")
+		return fmt.Errorf("cannot execute query: %w", err)
+	}
+	return nil
+}
+
+func (repo *RepoGeneric[T]) Delete(ctx context.Context, model *T) error {
+	cols, values := listCols(repo.DB, model)
+	for _, col := range cols {
+		if col != repo.cnf.PrimaryKey {
+			continue
+		}
+
+		q := fmt.Sprintf("DELETE FROM %s WHERE %s = ?", repo.cnf.Table, repo.cnf.PrimaryKey)
+		if _, err := repo.DB.ExecContext(ctx, q, values[0]); err != nil {
+			log.WithFields(log.Fields{
+				"query": q,
+				"key":   values[0],
+			}).Debug("SQL query: Delete")
+			return fmt.Errorf("cannot execute query: %w", err)
+		}
+		return nil
+	}
+	return fmt.Errorf("cannot find primary key: %s", repo.cnf.PrimaryKey)
 }
