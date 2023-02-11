@@ -179,6 +179,10 @@ func (repo *RepoGeneric[T]) Delete(ctx context.Context, model *T) error {
 }
 
 func (repo *RepoGeneric[T]) Exists(ctx context.Context, key string) (bool, error) {
+	if key == "" {
+		return false, nil
+	}
+
 	q := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE %s = ?", repo.cnf.Table, repo.cnf.PrimaryKey)
 	log.WithFields(log.Fields{
 		"query": q,

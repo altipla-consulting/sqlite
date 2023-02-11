@@ -65,6 +65,10 @@ func (repo *RepoSingleton[T]) Get(ctx context.Context, key string) (*T, error) {
 }
 
 func (repo *RepoSingleton[T]) Exists(ctx context.Context, key string) (bool, error) {
+	if key == "" {
+		return false, nil
+	}
+
 	var count int
 	q := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE %s = ?", repo.cnf.Table, repo.cnf.PrimaryKey)
 	log.WithFields(log.Fields{

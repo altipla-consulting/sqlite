@@ -85,3 +85,20 @@ func TestSingletonExists(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, exists)
 }
+
+func TestSingletonExistsShortcircuits(t *testing.T) {
+	ctx := context.Background()
+	db := connectDB(t)
+	defer db.Close()
+
+	repo := NewRepoSingleton[testModel](db, RepoConfig{
+		Table:      "TestModels",
+		PrimaryKey: "Name",
+	})
+
+	require.NoError(t, repo.Put(ctx, &testModel{Name: "", Value: "foo-value"}))
+
+	exists, err := repo.Exists(ctx, "")
+	require.NoError(t, err)
+	require.False(t, exists)
+}

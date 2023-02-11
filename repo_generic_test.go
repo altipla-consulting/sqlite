@@ -288,14 +288,30 @@ func TestGenericExists(t *testing.T) {
 		PrimaryKey: "Name",
 	})
 
-	model := &testModel{Name: "foo-name", Value: "foo-value"}
-	require.NoError(t, repo.Put(ctx, model))
+	require.NoError(t, repo.Put(ctx, &testModel{Name: "foo-name", Value: "foo-value"}))
 
 	exists, err := repo.Exists(ctx, "foo-name")
 	require.NoError(t, err)
 	require.True(t, exists)
 
 	exists, err = repo.Exists(ctx, "bar-name")
+	require.NoError(t, err)
+	require.False(t, exists)
+}
+
+func TestGenericExistsShortcircuits(t *testing.T) {
+	ctx := context.Background()
+	db := connectDB(t)
+	defer db.Close()
+
+	repo := NewRepoGeneric[testModel](db, RepoConfig{
+		Table:      "TestModels",
+		PrimaryKey: "Name",
+	})
+
+	require.NoError(t, repo.Put(ctx, &testModel{Name: "", Value: "foo-value"}))
+
+	exists, err := repo.Exists(ctx, "")
 	require.NoError(t, err)
 	require.False(t, exists)
 }
