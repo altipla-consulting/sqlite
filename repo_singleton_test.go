@@ -2,6 +2,7 @@ package sqlite
 
 import (
 	"context"
+	"database/sql"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -62,6 +63,22 @@ func TestSingletonGetNotFound(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, other.Name, "foo-name")
 	require.Empty(t, other.Value)
+}
+
+func TestSingletonGetEmptyKeyNotFound(t *testing.T) {
+	ctx := context.Background()
+	db := connectDB(t)
+	defer db.Close()
+
+	repo := NewRepoSingleton[testModel](db, RepoConfig{
+		Table:      "TestModels",
+		PrimaryKey: "Name",
+	})
+
+	other, err := repo.Get(ctx, "")
+	require.Nil(t, other)
+	require.ErrorIs(t, err, sql.ErrNoRows)
+	require.EqualError(t, err, "empty key: sql: no rows in result set")
 }
 
 func TestSingletonExists(t *testing.T) {

@@ -84,6 +84,22 @@ func TestGenericGetNotFound(t *testing.T) {
 	require.ErrorIs(t, err, sql.ErrNoRows)
 }
 
+func TestGenericGetEmptyKeyNotFound(t *testing.T) {
+	ctx := context.Background()
+	db := connectDB(t)
+	defer db.Close()
+
+	repo := NewRepoGeneric[testModel](db, RepoConfig{
+		Table:      "TestModels",
+		PrimaryKey: "Name",
+	})
+
+	other, err := repo.Get(ctx, "")
+	require.Nil(t, other)
+	require.ErrorIs(t, err, sql.ErrNoRows)
+	require.EqualError(t, err, "empty key: sql: no rows in result set")
+}
+
 func TestGenericQuery(t *testing.T) {
 	ctx := context.Background()
 	db := connectDB(t)

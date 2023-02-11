@@ -46,6 +46,10 @@ func (repo *RepoSingleton[T]) Put(ctx context.Context, model *T) error {
 }
 
 func (repo *RepoSingleton[T]) Get(ctx context.Context, key string) (*T, error) {
+	if key == "" {
+		return nil, fmt.Errorf("empty key: %w", sql.ErrNoRows)
+	}
+
 	var model T
 	cols, _ := listCols(repo.DB, model)
 	q := fmt.Sprintf("SELECT %s FROM %s WHERE %s = ?", strings.Join(cols, ","), repo.cnf.Table, repo.cnf.PrimaryKey)
