@@ -26,8 +26,8 @@ func NewRepoGeneric[T any](db *sqlx.DB, cnf RepoConfig) *RepoGeneric[T] {
 func (repo *RepoGeneric[T]) Count(ctx context.Context) (int64, error) {
 	var count int64
 	q := fmt.Sprintf("SELECT COUNT(*) FROM %s", repo.cnf.Table)
+	log.WithField("query", q).Trace("SQL query: Count")
 	if err := repo.DB.GetContext(ctx, &count, q); err != nil {
-		log.WithField("query", q).Debug("SQL query")
 		return 0, fmt.Errorf("cannot execute query: %w", err)
 	}
 	return count, nil
@@ -39,9 +39,9 @@ func (repo *RepoGeneric[T]) Put(ctx context.Context, model *T) error {
 	if err != nil {
 		return fmt.Errorf("cannot prepare sql statement: %w", err)
 	}
+	log.WithField("query", q).Trace("SQL query: Put")
 	_, err = repo.DB.ExecContext(ctx, q, args...)
 	if err != nil {
-		log.WithField("query", q).Debug("SQL query")
 		return fmt.Errorf("cannot execute query: %w", err)
 	}
 
@@ -53,8 +53,8 @@ func (repo *RepoGeneric[T]) List(ctx context.Context) ([]*T, error) {
 	var single T
 	cols, _ := listCols(repo.DB, single)
 	q := fmt.Sprintf("SELECT %s FROM %s", strings.Join(cols, ","), repo.cnf.Table)
+	log.WithField("query", q).Trace("SQL query: List")
 	if err := repo.DB.SelectContext(ctx, &models, q); err != nil {
-		log.WithField("query", q).Debug("SQL query")
 		return nil, fmt.Errorf("cannot execute query: %w", err)
 	}
 	return models, nil
@@ -64,11 +64,11 @@ func (repo *RepoGeneric[T]) Get(ctx context.Context, key string) (*T, error) {
 	var model T
 	cols, _ := listCols(repo.DB, model)
 	q := fmt.Sprintf("SELECT %s FROM %s WHERE %s = ?", strings.Join(cols, ","), repo.cnf.Table, repo.cnf.PrimaryKey)
+	log.WithFields(log.Fields{
+		"query": q,
+		"key":   key,
+	}).Trace("SQL query: Get")
 	if err := repo.DB.GetContext(ctx, &model, q, key); err != nil {
-		log.WithFields(log.Fields{
-			"query": q,
-			"key":   key,
-		}).Debug("SQL query: Get")
 		return nil, fmt.Errorf("cannot execute query: %w", err)
 	}
 	return &model, nil
@@ -114,27 +114,27 @@ func (repo *RepoGeneric[T]) getPK(model *T) reflect.Value {
 }
 
 func (repo *RepoGeneric[T]) Query(ctx context.Context, query string, args ...interface{}) (*T, error) {
+	log.WithField("query", query).Trace("SQL query: Query")
 	var model T
 	if err := repo.DB.GetContext(ctx, &model, query, args...); err != nil {
-		log.WithField("query", query).Debug("SQL query")
 		return nil, fmt.Errorf("cannot execute query: %w", err)
 	}
 	return &model, nil
 }
 
 func (repo *RepoGeneric[T]) QueryList(ctx context.Context, query string, args ...interface{}) ([]*T, error) {
+	log.WithField("query", query).Trace("SQL query: QueryList")
 	var models []*T
 	if err := repo.DB.SelectContext(ctx, &models, query, args...); err != nil {
-		log.WithField("query", query).Debug("SQL query")
 		return nil, fmt.Errorf("cannot execute query: %w", err)
 	}
 	return models, nil
 }
 
 func (repo *RepoGeneric[T]) QueryMap(ctx context.Context, query string, args ...interface{}) (map[string]*T, error) {
+	log.WithField("query", query).Trace("SQL query: QueryMap")
 	var model []*T
 	if err := repo.DB.SelectContext(ctx, &model, query, args...); err != nil {
-		log.WithField("query", query).Debug("SQL query")
 		return nil, fmt.Errorf("cannot execute query: %w", err)
 	}
 
@@ -148,11 +148,11 @@ func (repo *RepoGeneric[T]) QueryMap(ctx context.Context, query string, args ...
 
 func (repo *RepoGeneric[T]) DeleteKey(ctx context.Context, key string) error {
 	q := fmt.Sprintf("DELETE FROM %s WHERE %s = ?", repo.cnf.Table, repo.cnf.PrimaryKey)
+	log.WithFields(log.Fields{
+		"query": q,
+		"key":   key,
+	}).Trace("SQL query: DeleteKey")
 	if _, err := repo.DB.ExecContext(ctx, q, key); err != nil {
-		log.WithFields(log.Fields{
-			"query": q,
-			"key":   key,
-		}).Debug("SQL query: DeleteKey")
 		return fmt.Errorf("cannot execute query: %w", err)
 	}
 	return nil
@@ -166,11 +166,11 @@ func (repo *RepoGeneric[T]) Delete(ctx context.Context, model *T) error {
 		}
 
 		q := fmt.Sprintf("DELETE FROM %s WHERE %s = ?", repo.cnf.Table, repo.cnf.PrimaryKey)
+		log.WithFields(log.Fields{
+			"query": q,
+			"key":   values[0],
+		}).Trace("SQL query: Delete")
 		if _, err := repo.DB.ExecContext(ctx, q, values[0]); err != nil {
-			log.WithFields(log.Fields{
-				"query": q,
-				"key":   values[0],
-			}).Debug("SQL query: Delete")
 			return fmt.Errorf("cannot execute query: %w", err)
 		}
 		return nil
@@ -179,14 +179,14 @@ func (repo *RepoGeneric[T]) Delete(ctx context.Context, model *T) error {
 }
 
 func (repo *RepoGeneric[T]) Exists(ctx context.Context, key string) (bool, error) {
-	q := fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM %s WHERE %s = ?)", repo.cnf.Table, repo.cnf.PrimaryKey)
-	var exists bool
-	if err := repo.DB.GetContext(ctx, &exists, q, key); err != nil {
-		log.WithFields(log.Fields{
-			"query": q,
-			"key":   key,
-		}).Debug("SQL query: Exists")
+	q := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE %s = ?", repo.cnf.Table, repo.cnf.PrimaryKey)
+	log.WithFields(log.Fields{
+		"query": q,
+		"key":   key,
+	}).Trace("SQL query: Exists")
+	var count int
+	if err := repo.DB.GetContext(ctx, &count, q, key); err != nil {
 		return false, fmt.Errorf("cannot execute query: %w", err)
 	}
-	return exists, nil
+	return count > 0, nil
 }

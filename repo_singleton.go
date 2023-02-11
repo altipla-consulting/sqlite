@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/jmoiron/sqlx"
+	log "github.com/sirupsen/logrus"
 )
 
 type RepoSingleton[T any] struct {
@@ -31,12 +32,12 @@ func (repo *RepoSingleton[T]) getPK(model *T) (reflect.Value, any) {
 
 func (repo *RepoSingleton[T]) Put(ctx context.Context, model *T) error {
 	cols, values := listCols(repo.DB, model)
-	query, args, err := sqlx.In(fmt.Sprintf(`REPLACE INTO %s (%s) VALUES (?)`, repo.cnf.Table, strings.Join(cols, ",")), values)
+	q, args, err := sqlx.In(fmt.Sprintf(`REPLACE INTO %s (%s) VALUES (?)`, repo.cnf.Table, strings.Join(cols, ",")), values)
 	if err != nil {
 		return fmt.Errorf("cannot prepare sql statement: %w", err)
 	}
-
-	_, err = repo.DB.ExecContext(ctx, query, args...)
+	log.WithField("query", q).Trace("SQL query: Put")
+	_, err = repo.DB.ExecContext(ctx, q, args...)
 	if err != nil {
 		return fmt.Errorf("cannot execute query: %w", err)
 	}
@@ -48,6 +49,10 @@ func (repo *RepoSingleton[T]) Get(ctx context.Context, key string) (*T, error) {
 	var model T
 	cols, _ := listCols(repo.DB, model)
 	q := fmt.Sprintf("SELECT %s FROM %s WHERE %s = ?", strings.Join(cols, ","), repo.cnf.Table, repo.cnf.PrimaryKey)
+	log.WithFields(log.Fields{
+		"query": q,
+		"key":   key,
+	}).Trace("SQL query: Get")
 	if err := repo.DB.GetContext(ctx, &model, q, key); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			rv, _ := repo.getPK(&model)
@@ -62,6 +67,10 @@ func (repo *RepoSingleton[T]) Get(ctx context.Context, key string) (*T, error) {
 func (repo *RepoSingleton[T]) Exists(ctx context.Context, key string) (bool, error) {
 	var count int
 	q := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE %s = ?", repo.cnf.Table, repo.cnf.PrimaryKey)
+	log.WithFields(log.Fields{
+		"query": q,
+		"key":   key,
+	}).Trace("SQL query: Exists")
 	if err := repo.DB.GetContext(ctx, &count, q, key); err != nil {
 		return false, fmt.Errorf("cannot execute query: %w", err)
 	}
@@ -70,6 +79,7 @@ func (repo *RepoSingleton[T]) Exists(ctx context.Context, key string) (bool, err
 
 func (repo *RepoSingleton[T]) Query(ctx context.Context, query string, args ...interface{}) (*T, error) {
 	var model T
+	log.WithField("query", query).Trace("SQL query: Query")
 	if err := repo.DB.GetContext(ctx, &model, query, args...); err != nil {
 		return nil, fmt.Errorf("cannot execute query: %w", err)
 	}
