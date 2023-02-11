@@ -177,3 +177,16 @@ func (repo *RepoGeneric[T]) Delete(ctx context.Context, model *T) error {
 	}
 	return fmt.Errorf("cannot find primary key: %s", repo.cnf.PrimaryKey)
 }
+
+func (repo *RepoGeneric[T]) Exists(ctx context.Context, key string) (bool, error) {
+	q := fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM %s WHERE %s = ?)", repo.cnf.Table, repo.cnf.PrimaryKey)
+	var exists bool
+	if err := repo.DB.GetContext(ctx, &exists, q, key); err != nil {
+		log.WithFields(log.Fields{
+			"query": q,
+			"key":   key,
+		}).Debug("SQL query: Exists")
+		return false, fmt.Errorf("cannot execute query: %w", err)
+	}
+	return exists, nil
+}

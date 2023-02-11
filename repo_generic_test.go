@@ -277,3 +277,25 @@ func TestGenericDeleteDoubleNotExists(t *testing.T) {
 	require.NoError(t, repo.Delete(ctx, model))
 	require.NoError(t, repo.Delete(ctx, model))
 }
+
+func TestGenericExists(t *testing.T) {
+	ctx := context.Background()
+	db := connectDB(t)
+	defer db.Close()
+
+	repo := NewRepoGeneric[testModel](db, RepoConfig{
+		Table:      "TestModels",
+		PrimaryKey: "Name",
+	})
+
+	model := &testModel{Name: "foo-name", Value: "foo-value"}
+	require.NoError(t, repo.Put(ctx, model))
+
+	exists, err := repo.Exists(ctx, "foo-name")
+	require.NoError(t, err)
+	require.True(t, exists)
+
+	exists, err = repo.Exists(ctx, "bar-name")
+	require.NoError(t, err)
+	require.False(t, exists)
+}
