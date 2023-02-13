@@ -1,6 +1,7 @@
 package sqlite
 
 import (
+	"context"
 	"reflect"
 	"strings"
 
@@ -10,7 +11,14 @@ import (
 type RepoConfig struct {
 	Table      string
 	PrimaryKey string
+	Hooks      Hooks
 }
+
+type Hooks[T any] struct {
+	AfterPut []Hook[T]
+}
+
+type Hook[T any] func(ctx context.Context, model *T) error
 
 func listCols(db *sqlx.DB, model any) ([]string, []any) {
 	var keys []string

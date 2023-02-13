@@ -45,6 +45,12 @@ func (repo *RepoGeneric[T]) Put(ctx context.Context, model *T) error {
 		return fmt.Errorf("cannot execute query: %w", err)
 	}
 
+	for index, hook := range repo.cnf.Hooks.AfterPut {
+		if err := hook(ctx, model); err != nil {
+			return fmt.Errorf("hook %d failed: %w", index, err)
+		}
+	}
+
 	return nil
 }
 
