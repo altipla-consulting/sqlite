@@ -13,10 +13,10 @@ import (
 
 type RepoGeneric[T any] struct {
 	DB  *sqlx.DB
-	cnf RepoConfig
+	cnf RepoConfig[T]
 }
 
-func NewRepoGeneric[T any](db *sqlx.DB, cnf RepoConfig) *RepoGeneric[T] {
+func NewRepoGeneric[T any](db *sqlx.DB, cnf RepoConfig[T]) *RepoGeneric[T] {
 	return &RepoGeneric[T]{
 		DB:  db,
 		cnf: cnf,

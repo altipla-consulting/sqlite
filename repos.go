@@ -8,10 +8,10 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type RepoConfig struct {
+type RepoConfig[T any] struct {
 	Table      string
 	PrimaryKey string
-	Hooks      Hooks
+	Hooks      Hooks[T]
 }
 
 type Hooks[T any] struct {

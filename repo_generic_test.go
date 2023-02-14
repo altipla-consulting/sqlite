@@ -13,7 +13,7 @@ func TestGenericCount(t *testing.T) {
 	db := connectDB(t)
 	defer db.Close()
 
-	repo := NewRepoGeneric[testModel](db, RepoConfig{
+	repo := NewRepoGeneric(db, RepoConfig[testModel]{
 		Table:      "TestModels",
 		PrimaryKey: "Name",
 	})
@@ -33,7 +33,7 @@ func TestGenericPut(t *testing.T) {
 	db := connectDB(t)
 	defer db.Close()
 
-	repo := NewRepoGeneric[testModel](db, RepoConfig{
+	repo := NewRepoGeneric(db, RepoConfig[testModel]{
 		Table:      "TestModels",
 		PrimaryKey: "Name",
 	})
@@ -55,7 +55,7 @@ func TestGenericGet(t *testing.T) {
 	db := connectDB(t)
 	defer db.Close()
 
-	repo := NewRepoGeneric[testModel](db, RepoConfig{
+	repo := NewRepoGeneric(db, RepoConfig[testModel]{
 		Table:      "TestModels",
 		PrimaryKey: "Name",
 	})
@@ -74,7 +74,7 @@ func TestGenericGetNotFound(t *testing.T) {
 	db := connectDB(t)
 	defer db.Close()
 
-	repo := NewRepoGeneric[testModel](db, RepoConfig{
+	repo := NewRepoGeneric(db, RepoConfig[testModel]{
 		Table:      "TestModels",
 		PrimaryKey: "Name",
 	})
@@ -89,7 +89,7 @@ func TestGenericGetEmptyKeyNotFound(t *testing.T) {
 	db := connectDB(t)
 	defer db.Close()
 
-	repo := NewRepoGeneric[testModel](db, RepoConfig{
+	repo := NewRepoGeneric(db, RepoConfig[testModel]{
 		Table:      "TestModels",
 		PrimaryKey: "Name",
 	})
@@ -105,7 +105,7 @@ func TestGenericQuery(t *testing.T) {
 	db := connectDB(t)
 	defer db.Close()
 
-	repo := NewRepoGeneric[testModel](db, RepoConfig{
+	repo := NewRepoGeneric(db, RepoConfig[testModel]{
 		Table:      "TestModels",
 		PrimaryKey: "Name",
 	})
@@ -124,7 +124,7 @@ func TestGenericQueryMap(t *testing.T) {
 	db := connectDB(t)
 	defer db.Close()
 
-	repo := NewRepoGeneric[testModel](db, RepoConfig{
+	repo := NewRepoGeneric(db, RepoConfig[testModel]{
 		Table:      "TestModels",
 		PrimaryKey: "Name",
 	})
@@ -146,7 +146,7 @@ func TestGenericGetMulti(t *testing.T) {
 	db := connectDB(t)
 	defer db.Close()
 
-	repo := NewRepoGeneric[testModel](db, RepoConfig{
+	repo := NewRepoGeneric(db, RepoConfig[testModel]{
 		Table:      "TestModels",
 		PrimaryKey: "Name",
 	})
@@ -168,7 +168,7 @@ func TestGenericGetMultiNotFound(t *testing.T) {
 	db := connectDB(t)
 	defer db.Close()
 
-	repo := NewRepoGeneric[testModel](db, RepoConfig{
+	repo := NewRepoGeneric(db, RepoConfig[testModel]{
 		Table:      "TestModels",
 		PrimaryKey: "Name",
 	})
@@ -196,7 +196,7 @@ func TestGenericGetMultiEmpty(t *testing.T) {
 	db := connectDB(t)
 	defer db.Close()
 
-	repo := NewRepoGeneric[testModel](db, RepoConfig{
+	repo := NewRepoGeneric(db, RepoConfig[testModel]{
 		Table:      "TestModels",
 		PrimaryKey: "Name",
 	})
@@ -211,7 +211,7 @@ func TestGenericGetMultiNil(t *testing.T) {
 	db := connectDB(t)
 	defer db.Close()
 
-	repo := NewRepoGeneric[testModel](db, RepoConfig{
+	repo := NewRepoGeneric(db, RepoConfig[testModel]{
 		Table:      "TestModels",
 		PrimaryKey: "Name",
 	})
@@ -226,7 +226,7 @@ func TestGenericDeleteKey(t *testing.T) {
 	db := connectDB(t)
 	defer db.Close()
 
-	repo := NewRepoGeneric[testModel](db, RepoConfig{
+	repo := NewRepoGeneric(db, RepoConfig[testModel]{
 		Table:      "TestModels",
 		PrimaryKey: "Name",
 	})
@@ -245,7 +245,7 @@ func TestGenericDeleteKeyNotExists(t *testing.T) {
 	db := connectDB(t)
 	defer db.Close()
 
-	repo := NewRepoGeneric[testModel](db, RepoConfig{
+	repo := NewRepoGeneric(db, RepoConfig[testModel]{
 		Table:      "TestModels",
 		PrimaryKey: "Name",
 	})
@@ -262,7 +262,7 @@ func TestGenericDelete(t *testing.T) {
 	db := connectDB(t)
 	defer db.Close()
 
-	repo := NewRepoGeneric[testModel](db, RepoConfig{
+	repo := NewRepoGeneric(db, RepoConfig[testModel]{
 		Table:      "TestModels",
 		PrimaryKey: "Name",
 	})
@@ -282,7 +282,7 @@ func TestGenericDeleteDoubleNotExists(t *testing.T) {
 	db := connectDB(t)
 	defer db.Close()
 
-	repo := NewRepoGeneric[testModel](db, RepoConfig{
+	repo := NewRepoGeneric(db, RepoConfig[testModel]{
 		Table:      "TestModels",
 		PrimaryKey: "Name",
 	})
@@ -299,7 +299,7 @@ func TestGenericExists(t *testing.T) {
 	db := connectDB(t)
 	defer db.Close()
 
-	repo := NewRepoGeneric[testModel](db, RepoConfig{
+	repo := NewRepoGeneric(db, RepoConfig[testModel]{
 		Table:      "TestModels",
 		PrimaryKey: "Name",
 	})
@@ -320,7 +320,7 @@ func TestGenericExistsShortcircuits(t *testing.T) {
 	db := connectDB(t)
 	defer db.Close()
 
-	repo := NewRepoGeneric[testModel](db, RepoConfig{
+	repo := NewRepoGeneric(db, RepoConfig[testModel]{
 		Table:      "TestModels",
 		PrimaryKey: "Name",
 	})

@@ -14,10 +14,10 @@ import (
 
 type RepoSingleton[T any] struct {
 	DB  *sqlx.DB
-	cnf RepoConfig
+	cnf RepoConfig[T]
 }
 
-func NewRepoSingleton[T any](db *sqlx.DB, cnf RepoConfig) *RepoSingleton[T] {
+func NewRepoSingleton[T any](db *sqlx.DB, cnf RepoConfig[T]) *RepoSingleton[T] {
 	return &RepoSingleton[T]{
 		DB:  db,
 		cnf: cnf,
