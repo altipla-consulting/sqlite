@@ -13,7 +13,7 @@ func TestSingletonPutSingleton(t *testing.T) {
 	db := connectDB(t)
 	defer db.Close()
 
-	repo := NewRepoSingleton[testModel](db, RepoConfig{
+	repo := NewRepoSingleton(db, RepoConfig[testModel]{
 		Table:      "TestModels",
 		PrimaryKey: "Name",
 	})
@@ -35,7 +35,7 @@ func TestSingletonGet(t *testing.T) {
 	db := connectDB(t)
 	defer db.Close()
 
-	repo := NewRepoSingleton[testModel](db, RepoConfig{
+	repo := NewRepoSingleton(db, RepoConfig[testModel]{
 		Table:      "TestModels",
 		PrimaryKey: "Name",
 	})
@@ -54,7 +54,7 @@ func TestSingletonGetNotFound(t *testing.T) {
 	db := connectDB(t)
 	defer db.Close()
 
-	repo := NewRepoSingleton[testModel](db, RepoConfig{
+	repo := NewRepoSingleton(db, RepoConfig[testModel]{
 		Table:      "TestModels",
 		PrimaryKey: "Name",
 	})
@@ -70,7 +70,7 @@ func TestSingletonGetEmptyKeyNotFound(t *testing.T) {
 	db := connectDB(t)
 	defer db.Close()
 
-	repo := NewRepoSingleton[testModel](db, RepoConfig{
+	repo := NewRepoSingleton(db, RepoConfig[testModel]{
 		Table:      "TestModels",
 		PrimaryKey: "Name",
 	})
@@ -86,7 +86,7 @@ func TestSingletonExists(t *testing.T) {
 	db := connectDB(t)
 	defer db.Close()
 
-	repo := NewRepoSingleton[testModel](db, RepoConfig{
+	repo := NewRepoSingleton(db, RepoConfig[testModel]{
 		Table:      "TestModels",
 		PrimaryKey: "Name",
 	})
@@ -108,7 +108,7 @@ func TestSingletonExistsShortcircuits(t *testing.T) {
 	db := connectDB(t)
 	defer db.Close()
 
-	repo := NewRepoSingleton[testModel](db, RepoConfig{
+	repo := NewRepoSingleton(db, RepoConfig[testModel]{
 		Table:      "TestModels",
 		PrimaryKey: "Name",
 	})

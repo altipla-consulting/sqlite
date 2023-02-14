@@ -13,10 +13,10 @@ import (
 
 type RepoGeneric[T any] struct {
 	DB  *sqlx.DB
-	cnf RepoConfig
+	cnf RepoConfig[T]
 }
 
-func NewRepoGeneric[T any](db *sqlx.DB, cnf RepoConfig) *RepoGeneric[T] {
+func NewRepoGeneric[T any](db *sqlx.DB, cnf RepoConfig[T]) *RepoGeneric[T] {
 	return &RepoGeneric[T]{
 		DB:  db,
 		cnf: cnf,
@@ -43,6 +43,12 @@ func (repo *RepoGeneric[T]) Put(ctx context.Context, model *T) error {
 	_, err = repo.DB.ExecContext(ctx, q, args...)
 	if err != nil {
 		return fmt.Errorf("cannot execute query: %w", err)
+	}
+
+	for index, hook := range repo.cnf.Hooks.AfterPut {
+		if err := hook(ctx, model); err != nil {
+			return fmt.Errorf("hook %d failed: %w", index, err)
+		}
 	}
 
 	return nil
