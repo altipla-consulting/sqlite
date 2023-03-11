@@ -37,8 +37,7 @@ func (repo *RepoSingleton[T]) Put(ctx context.Context, model *T) error {
 		return fmt.Errorf("cannot prepare sql statement: %w", err)
 	}
 	log.WithField("query", q).Trace("SQL query: Put")
-	_, err = repo.DB.ExecContext(ctx, q, args...)
-	if err != nil {
+	if _, err := repo.DB.ExecContext(ctx, q, args...); err != nil {
 		return fmt.Errorf("cannot execute query: %w", err)
 	}
 

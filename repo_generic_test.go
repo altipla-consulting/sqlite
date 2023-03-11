@@ -331,3 +331,25 @@ func TestGenericExistsShortcircuits(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, exists)
 }
+
+func TestGenericExec(t *testing.T) {
+	ctx := context.Background()
+	db := connectDB(t)
+	defer db.Close()
+
+	repo := NewRepoGeneric(db, RepoConfig[testModel]{
+		Table:      "TestModels",
+		PrimaryKey: "Name",
+	})
+
+	result, err := repo.Exec(ctx, "INSERT INTO TestModels (Name, Value) VALUES (?, ?)", "foo-name", "foo-value")
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	affected, err := result.RowsAffected()
+	require.NoError(t, err)
+	require.EqualValues(t, affected, 1)
+
+	count, err := repo.Count(ctx)
+	require.NoError(t, err)
+	require.EqualValues(t, count, 1)
+}

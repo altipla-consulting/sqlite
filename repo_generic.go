@@ -40,8 +40,7 @@ func (repo *RepoGeneric[T]) Put(ctx context.Context, model *T) error {
 		return fmt.Errorf("cannot prepare sql statement: %w", err)
 	}
 	log.WithField("query", q).Trace("SQL query: Put")
-	_, err = repo.DB.ExecContext(ctx, q, args...)
-	if err != nil {
+	if _, err := repo.DB.ExecContext(ctx, q, args...); err != nil {
 		return fmt.Errorf("cannot execute query: %w", err)
 	}
 
@@ -203,4 +202,13 @@ func (repo *RepoGeneric[T]) Exists(ctx context.Context, key string) (bool, error
 		return false, fmt.Errorf("cannot execute query: %w", err)
 	}
 	return count > 0, nil
+}
+
+func (repo *RepoGeneric[T]) Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+	log.WithField("query", query).Trace("SQL query: Exec")
+	result, err := repo.DB.ExecContext(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("cannot execute query: %w", err)
+	}
+	return result, nil
 }
