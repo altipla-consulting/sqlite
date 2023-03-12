@@ -63,3 +63,11 @@ func (m MultiError) HasError() bool {
 	}
 	return false
 }
+
+func normalizeQuery(q string) string {
+	lines := strings.Split(q, "\n")
+	for i, line := range lines {
+		lines[i] = strings.TrimSpace(line)
+	}
+	return strings.TrimSpace(strings.Join(lines, " "))
+}

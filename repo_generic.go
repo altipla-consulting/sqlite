@@ -171,7 +171,7 @@ func (repo *RepoGeneric[T]) DeleteKey(ctx context.Context, key string) error {
 
 func (repo *RepoGeneric[T]) Delete(ctx context.Context, model *T) error {
 	cols, values := listCols(repo.DB, model)
-	for _, col := range cols {
+	for index, col := range cols {
 		if col != repo.cnf.PrimaryKey {
 			continue
 		}
@@ -179,9 +179,9 @@ func (repo *RepoGeneric[T]) Delete(ctx context.Context, model *T) error {
 		q := fmt.Sprintf("DELETE FROM %s WHERE %s = ?", repo.cnf.Table, repo.cnf.PrimaryKey)
 		log.WithFields(log.Fields{
 			"query": q,
-			"key":   values[0],
+			"key":   values[index],
 		}).Trace("SQL query: Delete")
-		if _, err := repo.DB.ExecContext(ctx, q, values[0]); err != nil {
+		if _, err := repo.DB.ExecContext(ctx, q, values[index]); err != nil {
 			return fmt.Errorf("cannot execute query: %w", err)
 		}
 		return nil
