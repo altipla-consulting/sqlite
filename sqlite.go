@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -23,4 +24,12 @@ func Open(dsn string) (*sqlx.DB, error) {
 	db.MapperFunc(func(s string) string { return s })
 
 	return db, nil
+}
+
+func normalizeQuery(q string) string {
+	lines := strings.Split(q, "\n")
+	for i, line := range lines {
+		lines[i] = strings.TrimSpace(line)
+	}
+	return strings.Join(lines, " ")
 }

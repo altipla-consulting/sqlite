@@ -91,6 +91,7 @@ func (repo *RepoSingleton[T]) Exists(ctx context.Context, key string) (bool, err
 }
 
 func (repo *RepoSingleton[T]) Query(ctx context.Context, query string, args ...interface{}) (*T, error) {
+	query = normalizeQuery(query)
 	var model T
 	log.WithField("query", query).Trace("SQL query: Query")
 	if err := repo.DB.GetContext(ctx, &model, query, args...); err != nil {

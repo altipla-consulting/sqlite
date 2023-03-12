@@ -123,6 +123,7 @@ func (repo *RepoGeneric[T]) getPK(model *T) reflect.Value {
 }
 
 func (repo *RepoGeneric[T]) Query(ctx context.Context, query string, args ...interface{}) (*T, error) {
+	query = normalizeQuery(query)
 	log.WithField("query", query).Trace("SQL query: Query")
 	var model T
 	if err := repo.DB.GetContext(ctx, &model, query, args...); err != nil {
@@ -132,6 +133,7 @@ func (repo *RepoGeneric[T]) Query(ctx context.Context, query string, args ...int
 }
 
 func (repo *RepoGeneric[T]) QueryList(ctx context.Context, query string, args ...interface{}) ([]*T, error) {
+	query = normalizeQuery(query)
 	log.WithField("query", query).Trace("SQL query: QueryList")
 	var models []*T
 	if err := repo.DB.SelectContext(ctx, &models, query, args...); err != nil {
@@ -205,6 +207,7 @@ func (repo *RepoGeneric[T]) Exists(ctx context.Context, key string) (bool, error
 }
 
 func (repo *RepoGeneric[T]) Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+	query = normalizeQuery(query)
 	log.WithField("query", query).Trace("SQL query: Exec")
 	result, err := repo.DB.ExecContext(ctx, query, args...)
 	if err != nil {
