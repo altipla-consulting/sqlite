@@ -10,7 +10,7 @@ import (
 )
 
 func Open(dsn string) (*sqlx.DB, error) {
-	if dsn != ":memory:" {
+	if !strings.Contains(dsn, ":memory:") {
 		if err := os.MkdirAll(filepath.Dir(dsn), 0700); err != nil {
 			return nil, fmt.Errorf("cannot create data directory: %w", err)
 		}
