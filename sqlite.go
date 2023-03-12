@@ -31,5 +31,5 @@ func normalizeQuery(q string) string {
 	for i, line := range lines {
 		lines[i] = strings.TrimSpace(line)
 	}
-	return strings.Join(lines, " ")
+	return strings.TrimSpace(strings.Join(lines, " "))
 }
