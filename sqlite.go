@@ -12,7 +12,7 @@ import (
 func Open(dsn string) (*sqlx.DB, error) {
 	var connect string
 	if dsn == ":memory:" {
-		dsn = "file::memory:?mode=memory"
+		connect = "file::memory:?mode=memory"
 	} else {
 		if err := os.MkdirAll(filepath.Dir(dsn), 0700); err != nil {
 			return nil, fmt.Errorf("cannot create data directory: %w", err)
