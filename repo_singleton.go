@@ -24,6 +24,10 @@ func NewRepoSingleton[T any](db *sqlx.DB, cnf RepoConfig[T]) *RepoSingleton[T] {
 	}
 }
 
+func (repo *RepoSingleton[T]) conn() *sqlx.DB {
+	return repo.DB
+}
+
 func (repo *RepoSingleton[T]) getPK(model *T) (reflect.Value, any) {
 	v := reflect.ValueOf(model).Elem()
 	f := v.FieldByName(repo.cnf.PrimaryKey)
@@ -36,7 +40,7 @@ func (repo *RepoSingleton[T]) Put(ctx context.Context, model *T) error {
 	if err != nil {
 		return fmt.Errorf("cannot prepare sql statement: %w", err)
 	}
-	log.WithField("query", q).Trace("SQL query: Put")
+	log.WithField("query", q).Trace("SQL query: RepoSingleton.Put")
 	if _, err := repo.DB.ExecContext(ctx, q, args...); err != nil {
 		return fmt.Errorf("cannot execute query: %w", err)
 	}
@@ -61,7 +65,7 @@ func (repo *RepoSingleton[T]) Get(ctx context.Context, key string) (*T, error) {
 	log.WithFields(log.Fields{
 		"query": q,
 		"key":   key,
-	}).Trace("SQL query: Get")
+	}).Trace("SQL query: RepoSingleton.Get")
 	if err := repo.DB.GetContext(ctx, &model, q, key); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			rv, _ := repo.getPK(&model)
@@ -78,12 +82,12 @@ func (repo *RepoSingleton[T]) Exists(ctx context.Context, key string) (bool, err
 		return false, nil
 	}
 
-	var count int
+	var count int64
 	q := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE %s = ?", repo.cnf.Table, repo.cnf.PrimaryKey)
 	log.WithFields(log.Fields{
 		"query": q,
 		"key":   key,
-	}).Trace("SQL query: Exists")
+	}).Trace("SQL query: RepoSingleton.Exists")
 	if err := repo.DB.GetContext(ctx, &count, q, key); err != nil {
 		return false, fmt.Errorf("cannot execute query: %w", err)
 	}
@@ -93,7 +97,7 @@ func (repo *RepoSingleton[T]) Exists(ctx context.Context, key string) (bool, err
 func (repo *RepoSingleton[T]) Query(ctx context.Context, query string, args ...interface{}) (*T, error) {
 	query = normalizeQuery(query)
 	var model T
-	log.WithField("query", query).Trace("SQL query: Query")
+	log.WithField("query", query).Trace("SQL query: RepoSingleton.Query")
 	if err := repo.DB.GetContext(ctx, &model, query, args...); err != nil {
 		return nil, fmt.Errorf("cannot execute query: %w", err)
 	}

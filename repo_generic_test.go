@@ -353,3 +353,24 @@ func TestGenericExec(t *testing.T) {
 	require.NoError(t, err)
 	require.EqualValues(t, count, 1)
 }
+
+func TestGenericExistsQuery(t *testing.T) {
+	ctx := context.Background()
+	db := connectDB(t)
+	defer db.Close()
+
+	repo := NewRepoGeneric(db, RepoConfig[testModel]{
+		Table:      "TestModels",
+		PrimaryKey: "Name",
+	})
+
+	require.NoError(t, repo.Put(ctx, &testModel{Name: "foo-name", Value: "foo-value"}))
+
+	exists, err := repo.ExistsQuery().QueryValue(ctx, sql.Named("Name", "foo-name"))
+	require.NoError(t, err)
+	require.True(t, exists)
+
+	exists, err = repo.ExistsQuery().QueryValue(ctx, sql.Named("Name", "bar-name"))
+	require.NoError(t, err)
+	require.False(t, exists)
+}
