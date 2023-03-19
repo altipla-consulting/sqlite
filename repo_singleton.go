@@ -35,6 +35,10 @@ func (repo *RepoSingleton[T]) getPK(model *T) (reflect.Value, any) {
 }
 
 func (repo *RepoSingleton[T]) Put(ctx context.Context, model *T) error {
+	if err := runBeforePut(ctx, repo.cnf.Hooks, model); err != nil {
+		return err
+	}
+
 	cols, values := listCols(repo.DB, model)
 	q, args, err := sqlx.In(fmt.Sprintf(`REPLACE INTO %s (%s) VALUES (?)`, repo.cnf.Table, strings.Join(cols, ",")), values)
 	if err != nil {
@@ -49,6 +53,10 @@ func (repo *RepoSingleton[T]) Put(ctx context.Context, model *T) error {
 		if err := hook(ctx, model); err != nil {
 			return fmt.Errorf("hook %d failed: %w", index, err)
 		}
+	}
+
+	if err := runAfterPut(ctx, repo.cnf.Hooks, model); err != nil {
+		return err
 	}
 
 	return nil
