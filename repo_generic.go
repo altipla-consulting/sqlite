@@ -37,25 +37,22 @@ func (repo *RepoGeneric[T]) Count(ctx context.Context) (int64, error) {
 	return count, nil
 }
 
+func (repo *RepoGeneric[T]) BeginTx(ctx context.Context) (*Tx[T], error) {
+	return newTx(ctx, repo.DB, repo.cnf)
+}
+
 func (repo *RepoGeneric[T]) Put(ctx context.Context, model *T) error {
-	if err := runBeforePut(ctx, repo.cnf.Hooks, model); err != nil {
-		return err
-	}
-
-	cols, values := listCols(repo.DB, model)
-	q, args, err := sqlx.In(fmt.Sprintf(`REPLACE INTO %s (%s) VALUES (?)`, repo.cnf.Table, strings.Join(cols, ",")), values)
+	tx, err := repo.BeginTx(ctx)
 	if err != nil {
-		return fmt.Errorf("cannot prepare sql statement: %w", err)
-	}
-	log.WithField("query", q).Trace("SQL query: RepoGeneric.Put")
-	if _, err := repo.DB.ExecContext(ctx, q, args...); err != nil {
-		return fmt.Errorf("cannot execute query: %w", err)
-	}
-
-	if err := runAfterPut(ctx, repo.cnf.Hooks, model); err != nil {
 		return err
 	}
-
+	defer tx.Rollback()
+	if err := tx.Put(ctx, model); err != nil {
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return err
+	}
 	return nil
 }
 

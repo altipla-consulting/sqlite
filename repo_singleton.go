@@ -34,31 +34,22 @@ func (repo *RepoSingleton[T]) getPK(model *T) (reflect.Value, any) {
 	return f, f.Interface()
 }
 
+func (repo *RepoSingleton[T]) BeginTx(ctx context.Context) (*Tx[T], error) {
+	return newTx(ctx, repo.DB, repo.cnf)
+}
+
 func (repo *RepoSingleton[T]) Put(ctx context.Context, model *T) error {
-	if err := runBeforePut(ctx, repo.cnf.Hooks, model); err != nil {
-		return err
-	}
-
-	cols, values := listCols(repo.DB, model)
-	q, args, err := sqlx.In(fmt.Sprintf(`REPLACE INTO %s (%s) VALUES (?)`, repo.cnf.Table, strings.Join(cols, ",")), values)
+	tx, err := repo.BeginTx(ctx)
 	if err != nil {
-		return fmt.Errorf("cannot prepare sql statement: %w", err)
-	}
-	log.WithField("query", q).Trace("SQL query: RepoSingleton.Put")
-	if _, err := repo.DB.ExecContext(ctx, q, args...); err != nil {
-		return fmt.Errorf("cannot execute query: %w", err)
-	}
-
-	for index, hook := range repo.cnf.Hooks.AfterPut {
-		if err := hook(ctx, model); err != nil {
-			return fmt.Errorf("hook %d failed: %w", index, err)
-		}
-	}
-
-	if err := runAfterPut(ctx, repo.cnf.Hooks, model); err != nil {
 		return err
 	}
-
+	defer tx.Rollback()
+	if err := tx.Put(ctx, model); err != nil {
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return err
+	}
 	return nil
 }
 

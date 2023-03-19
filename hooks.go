@@ -12,13 +12,13 @@ type Hooks[T any] struct {
 
 type Hook[T any] func(ctx context.Context, model *T) error
 
-type hookerBeforePut interface {
-	BeforePut(ctx context.Context) error
+type hookerBeforePut[T any] interface {
+	BeforePut(ctx context.Context, tx *Tx[T]) error
 }
 
-func runBeforePut[T any](ctx context.Context, hooks Hooks[T], model *T) error {
-	if hook, ok := any(model).(hookerBeforePut); ok {
-		if err := hook.BeforePut(ctx); err != nil {
+func runBeforePut[T any](ctx context.Context, tx *Tx[T], hooks Hooks[T], model *T) error {
+	if hook, ok := any(model).(hookerBeforePut[T]); ok {
+		if err := hook.BeforePut(ctx, tx); err != nil {
 			return fmt.Errorf("before put hook: %w", err)
 		}
 	}
@@ -37,8 +37,8 @@ type hookerAfterPut interface {
 }
 
 func runAfterPut[T any](ctx context.Context, hooks Hooks[T], model *T) error {
-	if hook, ok := any(model).(hookerBeforePut); ok {
-		if err := hook.BeforePut(ctx); err != nil {
+	if hook, ok := any(model).(hookerAfterPut); ok {
+		if err := hook.AfterPut(ctx); err != nil {
 			return fmt.Errorf("after put hook: %w", err)
 		}
 	}
