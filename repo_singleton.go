@@ -102,3 +102,25 @@ func (repo *RepoSingleton[T]) Query(ctx context.Context, query string, args ...i
 	}
 	return &model, nil
 }
+
+func (repo *RepoSingleton[T]) QueryList(ctx context.Context, query string, args ...interface{}) ([]*T, error) {
+	query = normalizeQuery(query)
+	log.WithField("query", query).Trace("SQL query: RepoSingleton.QueryList")
+	var models []*T
+	if err := repo.DB.SelectContext(ctx, &models, query, args...); err != nil {
+		return nil, fmt.Errorf("cannot execute query: %w", err)
+	}
+	return models, nil
+}
+
+func (repo *RepoSingleton[T]) List(ctx context.Context) ([]*T, error) {
+	var models []*T
+	var single T
+	cols, _ := listCols(repo.DB, single)
+	q := fmt.Sprintf("SELECT %s FROM %s", strings.Join(cols, ","), repo.cnf.Table)
+	log.WithField("query", q).Trace("SQL query: RepoSingleton.List")
+	if err := repo.DB.SelectContext(ctx, &models, q); err != nil {
+		return nil, fmt.Errorf("cannot execute query: %w", err)
+	}
+	return models, nil
+}
