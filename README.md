@@ -6,9 +6,6 @@
 Access SQLite3 through structured repository patterns.
 
 
-SQL advanced types.
-
-
 ## Install
 
 ```shell
