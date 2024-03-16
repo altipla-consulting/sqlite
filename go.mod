@@ -1,6 +1,6 @@
 module github.com/altipla-consulting/sqlite
 
-go 1.19
+go 1.21
 
 require (
 	github.com/jmoiron/sqlx v1.3.5

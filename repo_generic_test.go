@@ -163,6 +163,10 @@ func TestGenericGetMulti(t *testing.T) {
 	require.Equal(t, results[1].Value, "baz-value")
 }
 
+type unwrapper interface {
+	Unwrap() []error
+}
+
 func TestGenericGetMultiNotFound(t *testing.T) {
 	ctx := context.Background()
 	db := connectDB(t)
@@ -178,12 +182,15 @@ func TestGenericGetMultiNotFound(t *testing.T) {
 
 	results, err := repo.GetMulti(ctx, []string{"foo-name", "bar-name", "baz-name"})
 
-	var multi MultiError
+	require.ErrorIs(t, err, sql.ErrNoRows)
+	var multi unwrapper
 	require.ErrorAs(t, err, &multi)
-	require.Len(t, multi, 3)
-	require.NoError(t, multi[0])
-	require.ErrorIs(t, multi[1], sql.ErrNoRows)
-	require.NoError(t, multi[2])
+	errors := multi.Unwrap()
+	require.Len(t, errors, 1)
+	require.ErrorIs(t, errors[0], sql.ErrNoRows)
+	var missing *MissingKeyError
+	require.ErrorAs(t, errors[0], &missing)
+	require.Equal(t, missing.Key, "bar-name")
 
 	require.Len(t, results, 3)
 	require.Equal(t, results[0].Value, "foo-value")

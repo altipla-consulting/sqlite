@@ -3,6 +3,7 @@ package sqlite
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log/slog"
 	"reflect"
@@ -78,6 +79,9 @@ func (repo *RepoGeneric[T]) Get(ctx context.Context, key string) (*T, error) {
 	q := fmt.Sprintf("SELECT %s FROM %s WHERE %s = ?", strings.Join(cols, ","), repo.cnf.Table, repo.cnf.PrimaryKey)
 	slog.Debug("SQL", slog.String("method", "RepoGeneric.Get"), slog.String("q", q), slog.String("key", key))
 	if err := repo.db.GetContext(ctx, &model, q, key); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("%w: %w", &MissingKeyError{key}, err)
+		}
 		return nil, fmt.Errorf("cannot execute query: %w", err)
 	}
 	return &model, nil
@@ -99,20 +103,19 @@ func (repo *RepoGeneric[T]) GetMulti(ctx context.Context, keys []string) ([]*T, 
 		return nil, err
 	}
 
-	var multi MultiError
+	var multi []error
 	var results []*T
 	for _, key := range keys {
 		if models[key] == nil {
-			multi = append(multi, fmt.Errorf("cannot get %q: %w", key, sql.ErrNoRows))
+			multi = append(multi, fmt.Errorf("%w: %w", &MissingKeyError{key}, sql.ErrNoRows))
 			results = append(results, nil)
 		} else {
-			multi = append(multi, nil)
 			results = append(results, models[key])
 		}
 	}
 
-	if multi.HasError() {
-		return results, multi
+	if err := errors.Join(multi...); err != nil {
+		return results, err
 	}
 	return results, nil
 }
