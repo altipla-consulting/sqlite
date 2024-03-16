@@ -9,7 +9,26 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func Open(dsn string) (*sqlx.DB, error) {
+type OpenOption func(opts *openOptions)
+
+type openOptions struct {
+	driverName string
+}
+
+func WithDriver(driverName string) OpenOption {
+	return func(opts *openOptions) {
+		opts.driverName = driverName
+	}
+}
+
+func Open(dsn string, options ...OpenOption) (*sqlx.DB, error) {
+	opts := openOptions{
+		driverName: "sqlite3",
+	}
+	for _, opt := range options {
+		opt(&opts)
+	}
+
 	var connect string
 	if dsn == ":memory:" {
 		connect = "file:/memory?vfs=memdb"
@@ -19,8 +38,10 @@ func Open(dsn string) (*sqlx.DB, error) {
 		}
 		connect = "file:" + dsn + "?_timeout=5000&_fk=true&_journal=WAL&_synchronous=NORMAL&mode=rwc&cache=private"
 	}
-	slog.Debug("Open SQLite3 connection", slog.String("dsn", connect))
-	db, err := sqlx.Open("sqlite3", connect)
+	slog.Debug("Open SQLite3 connection",
+		slog.String("dsn", connect),
+		slog.String("driver", opts.driverName))
+	db, err := sqlx.Open(opts.driverName, connect)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open database: %w", err)
 	}
