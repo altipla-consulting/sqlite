@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log/slog"
 
 	"github.com/jmoiron/sqlx"
-	log "github.com/sirupsen/logrus"
 )
 
 type queryable interface {
@@ -55,7 +55,7 @@ func (q *Query[T]) Query(ctx context.Context, args ...sql.NamedArg) (*T, error) 
 	}
 
 	var model T
-	log.WithField("q", q.sql).Trace("SQL query: Query.Query")
+	slog.Debug("SQL", slog.String("method", "Query.Query"), slog.String("q", q.sql))
 	if err := q.db.GetContext(ctx, &model, q.sql, q.args...); err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func (q *Query[T]) QueryValue(ctx context.Context, args ...sql.NamedArg) (T, err
 		return model, err
 	}
 
-	log.WithField("q", q.sql).Trace("SQL query: Query.Query")
+	slog.Debug("SQL", slog.String("method", "Query.QueryValue"), slog.String("q", q.sql))
 	if err := q.db.GetContext(ctx, &model, q.sql, q.args...); err != nil {
 		return model, err
 	}

@@ -3,10 +3,10 @@ package sqlite
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
-	log "github.com/sirupsen/logrus"
 )
 
 type Tx[T any] struct {
@@ -46,7 +46,7 @@ func (tx *Tx[T]) Put(ctx context.Context, model *T) error {
 	if err != nil {
 		return fmt.Errorf("cannot prepare sql statement: %w", err)
 	}
-	log.WithField("query", q).Trace("SQL query: Tx.Put")
+	slog.Debug("SQL", slog.String("method", "Tx.Put"), slog.String("q", q))
 	if _, err := tx.tx.ExecContext(ctx, q, args...); err != nil {
 		return fmt.Errorf("cannot execute query: %w", err)
 	}

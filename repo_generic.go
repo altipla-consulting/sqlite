@@ -4,11 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"reflect"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
-	log "github.com/sirupsen/logrus"
 )
 
 type RepoGeneric[T any] struct {
@@ -30,7 +30,7 @@ func (repo *RepoGeneric[T]) conn() *sqlx.DB {
 func (repo *RepoGeneric[T]) Count(ctx context.Context) (int64, error) {
 	var count int64
 	q := fmt.Sprintf("SELECT COUNT(*) FROM %s", repo.cnf.Table)
-	log.WithField("query", q).Trace("SQL query: RepoGeneric.Count")
+	slog.Debug("SQL", slog.String("method", "RepoGeneric.Count"), slog.String("q", q))
 	if err := repo.db.GetContext(ctx, &count, q); err != nil {
 		return 0, fmt.Errorf("cannot execute query: %w", err)
 	}
@@ -61,7 +61,7 @@ func (repo *RepoGeneric[T]) List(ctx context.Context) ([]*T, error) {
 	var single T
 	cols, _ := listCols(repo.db, single)
 	q := fmt.Sprintf("SELECT %s FROM %s", strings.Join(cols, ","), repo.cnf.Table)
-	log.WithField("query", q).Trace("SQL query: RepoGeneric.List")
+	slog.Debug("SQL", slog.String("method", "RepoGeneric.List"), slog.String("q", q))
 	if err := repo.db.SelectContext(ctx, &models, q); err != nil {
 		return nil, fmt.Errorf("cannot execute query: %w", err)
 	}
@@ -76,10 +76,7 @@ func (repo *RepoGeneric[T]) Get(ctx context.Context, key string) (*T, error) {
 	var model T
 	cols, _ := listCols(repo.db, model)
 	q := fmt.Sprintf("SELECT %s FROM %s WHERE %s = ?", strings.Join(cols, ","), repo.cnf.Table, repo.cnf.PrimaryKey)
-	log.WithFields(log.Fields{
-		"query": q,
-		"key":   key,
-	}).Trace("SQL query: RepoGeneric.Get")
+	slog.Debug("SQL", slog.String("method", "RepoGeneric.Get"), slog.String("q", q), slog.String("key", key))
 	if err := repo.db.GetContext(ctx, &model, q, key); err != nil {
 		return nil, fmt.Errorf("cannot execute query: %w", err)
 	}
@@ -127,7 +124,7 @@ func (repo *RepoGeneric[T]) getPK(model *T) reflect.Value {
 
 func (repo *RepoGeneric[T]) Query(ctx context.Context, query string, args ...interface{}) (*T, error) {
 	query = normalizeQuery(query)
-	log.WithField("query", query).Trace("SQL query: RepoGeneric.Query")
+	slog.Debug("SQL", slog.String("method", "RepoGeneric.Query"), slog.String("q", query))
 	var model T
 	if err := repo.db.GetContext(ctx, &model, query, args...); err != nil {
 		return nil, fmt.Errorf("cannot execute query: %w", err)
@@ -137,7 +134,7 @@ func (repo *RepoGeneric[T]) Query(ctx context.Context, query string, args ...int
 
 func (repo *RepoGeneric[T]) QueryList(ctx context.Context, query string, args ...interface{}) ([]*T, error) {
 	query = normalizeQuery(query)
-	log.WithField("query", query).Trace("SQL query: RepoGeneric.QueryList")
+	slog.Debug("SQL", slog.String("method", "RepoGeneric.QueryList"), slog.String("q", query))
 	var models []*T
 	if err := repo.db.SelectContext(ctx, &models, query, args...); err != nil {
 		return nil, fmt.Errorf("cannot execute query: %w", err)
@@ -146,7 +143,7 @@ func (repo *RepoGeneric[T]) QueryList(ctx context.Context, query string, args ..
 }
 
 func (repo *RepoGeneric[T]) QueryMap(ctx context.Context, query string, args ...interface{}) (map[string]*T, error) {
-	log.WithField("query", query).Trace("SQL query: RepoGeneric.QueryMap")
+	slog.Debug("SQL", slog.String("method", "RepoGeneric.QueryMap"), slog.String("q", query))
 	var model []*T
 	if err := repo.db.SelectContext(ctx, &model, query, args...); err != nil {
 		return nil, fmt.Errorf("cannot execute query: %w", err)
@@ -162,10 +159,7 @@ func (repo *RepoGeneric[T]) QueryMap(ctx context.Context, query string, args ...
 
 func (repo *RepoGeneric[T]) DeleteKey(ctx context.Context, key string) error {
 	q := fmt.Sprintf("DELETE FROM %s WHERE %s = ?", repo.cnf.Table, repo.cnf.PrimaryKey)
-	log.WithFields(log.Fields{
-		"query": q,
-		"key":   key,
-	}).Trace("SQL query: RepoGeneric.DeleteKey")
+	slog.Debug("SQL", slog.String("method", "RepoGeneric.DeleteKey"), slog.String("q", q), slog.String("key", key))
 	if _, err := repo.db.ExecContext(ctx, q, key); err != nil {
 		return fmt.Errorf("cannot execute query: %w", err)
 	}
@@ -180,10 +174,7 @@ func (repo *RepoGeneric[T]) Delete(ctx context.Context, model *T) error {
 		}
 
 		q := fmt.Sprintf("DELETE FROM %s WHERE %s = ?", repo.cnf.Table, repo.cnf.PrimaryKey)
-		log.WithFields(log.Fields{
-			"query": q,
-			"key":   values[index],
-		}).Trace("SQL query: RepoGeneric.Delete")
+		slog.Debug("SQL", slog.String("method", "RepoGeneric.Delete"), slog.String("q", q), slog.Any("key", values[index]))
 		if _, err := repo.db.ExecContext(ctx, q, values[index]); err != nil {
 			return fmt.Errorf("cannot execute query: %w", err)
 		}
@@ -198,10 +189,7 @@ func (repo *RepoGeneric[T]) Exists(ctx context.Context, key string) (bool, error
 	}
 
 	q := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE %s = ?", repo.cnf.Table, repo.cnf.PrimaryKey)
-	log.WithFields(log.Fields{
-		"query": q,
-		"key":   key,
-	}).Trace("SQL query: RepoGeneric.Exists")
+	slog.Debug("SQL", slog.String("method", "RepoGeneric.Exists"), slog.String("q", q), slog.String("key", key))
 	var count int64
 	if err := repo.db.GetContext(ctx, &count, q, key); err != nil {
 		return false, fmt.Errorf("cannot execute query: %w", err)
@@ -216,7 +204,7 @@ func (repo *RepoGeneric[T]) ExistsQuery() *Query[bool] {
 
 func (repo *RepoGeneric[T]) Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	query = normalizeQuery(query)
-	log.WithField("query", query).Trace("SQL query: RepoGeneric.Exec")
+	slog.Debug("SQL", slog.String("method", "RepoGeneric.Exec"), slog.String("q", query))
 	result, err := repo.db.ExecContext(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("cannot execute query: %w", err)

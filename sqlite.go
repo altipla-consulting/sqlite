@@ -2,11 +2,11 @@ package sqlite
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 
 	"github.com/jmoiron/sqlx"
-	log "github.com/sirupsen/logrus"
 )
 
 func Open(dsn string) (*sqlx.DB, error) {
@@ -19,7 +19,7 @@ func Open(dsn string) (*sqlx.DB, error) {
 		}
 		connect = "file:" + dsn + "?_timeout=5000&_fk=true&_journal=WAL&_synchronous=NORMAL&mode=rwc&cache=private"
 	}
-	log.WithField("dsn", connect).Debug("Open SQLite3 connection")
+	slog.Debug("Open SQLite3 connection", slog.String("dsn", connect))
 	db, err := sqlx.Open("sqlite3", connect)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open database: %w", err)

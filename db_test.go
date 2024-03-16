@@ -1,11 +1,12 @@
 package sqlite
 
 import (
+	"log/slog"
+	"os"
 	"testing"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
-	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 )
 
@@ -15,7 +16,7 @@ type testModel struct {
 }
 
 func connectDB(t *testing.T) *sqlx.DB {
-	log.SetLevel(log.TraceLevel)
+	slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelDebug}))
 
 	db, err := Open(":memory:")
 	require.NoError(t, err)
