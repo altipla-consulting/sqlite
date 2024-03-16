@@ -33,6 +33,7 @@ func Open(dsn string, options ...OpenOption) (*sqlx.DB, error) {
 	if dsn == ":memory:" {
 		connect = "file:/memory?vfs=memdb"
 	} else {
+		connect = dsn
 		if opts.driverName == "sqlite3" {
 			if err := os.MkdirAll(filepath.Dir(dsn), 0700); err != nil {
 				return nil, fmt.Errorf("cannot create data directory: %w", err)
