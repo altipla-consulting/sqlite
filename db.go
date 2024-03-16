@@ -33,10 +33,12 @@ func Open(dsn string, options ...OpenOption) (*sqlx.DB, error) {
 	if dsn == ":memory:" {
 		connect = "file:/memory?vfs=memdb"
 	} else {
-		if err := os.MkdirAll(filepath.Dir(dsn), 0700); err != nil {
-			return nil, fmt.Errorf("cannot create data directory: %w", err)
+		if opts.driverName == "sqlite3" {
+			if err := os.MkdirAll(filepath.Dir(dsn), 0700); err != nil {
+				return nil, fmt.Errorf("cannot create data directory: %w", err)
+			}
+			connect = "file:" + dsn + "?_timeout=5000&_fk=true&_journal=WAL&_synchronous=NORMAL&mode=rwc&cache=private"
 		}
-		connect = "file:" + dsn + "?_timeout=5000&_fk=true&_journal=WAL&_synchronous=NORMAL&mode=rwc&cache=private"
 	}
 	slog.Debug("Open SQLite3 connection",
 		slog.String("dsn", connect),
