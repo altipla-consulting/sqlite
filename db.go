@@ -13,6 +13,7 @@ type OpenOption func(opts *openOptions)
 
 type openOptions struct {
 	driverName string
+	logger     *slog.Logger
 }
 
 func WithDriver(driverName string) OpenOption {
@@ -21,9 +22,16 @@ func WithDriver(driverName string) OpenOption {
 	}
 }
 
+func WithLogger(logger *slog.Logger) OpenOption {
+	return func(opts *openOptions) {
+		opts.logger = logger
+	}
+}
+
 func Open(dsn string, options ...OpenOption) (*sqlx.DB, error) {
 	opts := openOptions{
 		driverName: "sqlite3",
+		logger:     slog.Default(),
 	}
 	for _, opt := range options {
 		opt(&opts)
@@ -41,7 +49,7 @@ func Open(dsn string, options ...OpenOption) (*sqlx.DB, error) {
 			connect = "file:" + dsn + "?_timeout=5000&_fk=true&_journal=WAL&_synchronous=NORMAL&mode=rwc&cache=private"
 		}
 	}
-	slog.Debug("Open SQLite3 connection",
+	opts.logger.Debug("Open SQLite3 connection",
 		slog.String("dsn", connect),
 		slog.String("driver", opts.driverName))
 	db, err := sqlx.Open(opts.driverName, connect)

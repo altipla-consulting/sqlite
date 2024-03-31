@@ -46,7 +46,7 @@ func (tx *Tx[T]) Put(ctx context.Context, model *T) error {
 	if err != nil {
 		return fmt.Errorf("cannot prepare sql statement: %w", err)
 	}
-	slog.Debug("SQL", slog.String("method", "Tx.Put"), slog.String("q", q))
+	tx.cnf.Logger.Log(ctx, levelTrace, "SQL", slog.String("method", "Tx.Put"), slog.String("q", q))
 	if _, err := tx.tx.ExecContext(ctx, q, args...); err != nil {
 		return fmt.Errorf("cannot execute query: %w", err)
 	}

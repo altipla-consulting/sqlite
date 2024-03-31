@@ -2,6 +2,7 @@ package sqlite
 
 import (
 	"fmt"
+	"log/slog"
 	"reflect"
 	"strings"
 
@@ -12,6 +13,13 @@ type RepoConfig[T any] struct {
 	Table      string
 	PrimaryKey string
 	Hooks      Hooks[T]
+	Logger     *slog.Logger
+}
+
+func (c *RepoConfig[T]) fillDefaults() {
+	if c.Logger == nil {
+		c.Logger = slog.Default()
+	}
 }
 
 func listCols(db *sqlx.DB, model any) ([]string, []any) {
