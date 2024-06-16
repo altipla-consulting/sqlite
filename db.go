@@ -46,7 +46,7 @@ func Open(dsn string, options ...OpenOption) (*sqlx.DB, error) {
 			if err := os.MkdirAll(filepath.Dir(dsn), 0700); err != nil {
 				return nil, fmt.Errorf("cannot create data directory: %w", err)
 			}
-			connect = "file:" + dsn + "?_timeout=5000&_fk=true&_journal=WAL&_synchronous=NORMAL&mode=rwc&cache=private"
+			connect = "file:" + dsn + "?_timeout=5000&_fk=true&_journal=WAL&_synchronous=NORMAL&mode=rwc&cache=private&_txlock=immediate"
 		}
 	}
 	opts.logger.Debug("Open SQLite3 connection",
