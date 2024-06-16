@@ -39,7 +39,7 @@ func Open(dsn string, options ...OpenOption) (*sqlx.DB, error) {
 
 	var connect string
 	if dsn == ":memory:" {
-		connect = "file:/memory?vfs=memdb"
+		connect = "file:memory?mode=memory&cache=private"
 	} else {
 		connect = dsn
 		if opts.driverName == "sqlite3" {
