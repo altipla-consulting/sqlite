@@ -8,8 +8,10 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// Migrations is a list of migrations to run
 type Migration func(ctx context.Context, db *sqlx.DB) error
 
+// Migrate runs all migrations in the list
 func Migrate(ctx context.Context, db *sqlx.DB, migrations []Migration) error {
 	var version int64
 	if err := db.GetContext(ctx, &version, "PRAGMA user_version"); err != nil {
@@ -35,7 +37,13 @@ func Migrate(ctx context.Context, db *sqlx.DB, migrations []Migration) error {
 	return nil
 }
 
-func RunLastMigration(ctx context.Context, db *sqlx.DB, migrations []Migration) error {
+// RerunLastMigration runs the last migration in the list
+func RerunLastMigration(ctx context.Context, db *sqlx.DB, migrations []Migration) error {
+	if len(migrations) == 0 {
+		slog.Info("No migrations to run")
+		return nil
+	}
+
 	if err := migrations[len(migrations)-1](ctx, db); err != nil {
 		return err
 	}
