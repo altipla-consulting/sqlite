@@ -8,10 +8,10 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// Migrations is a list of migrations to run
+// Migrations is a list of migrations to run.
 type Migration func(ctx context.Context, db *sqlx.DB) error
 
-// Migrate runs all migrations in the list
+// Migrate run the migrations from the list that have not been executed.
 func Migrate(ctx context.Context, db *sqlx.DB, migrations []Migration) error {
 	var version int64
 	if err := db.GetContext(ctx, &version, "PRAGMA user_version"); err != nil {
