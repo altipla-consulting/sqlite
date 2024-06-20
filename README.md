@@ -60,6 +60,14 @@ if err := sqlite.Migrate(ctx, db, schemas.Migrations); err != nil {
 }
 ```
 
+We can run the latest migrations as many times as we want to test them:
+
+```go
+if err := sqlite.RunLastMigration(ctx, db, schemas.Migrations); err != nil {
+	return err
+}
+```
+
 ## Contributing
 
 You can make pull requests or create issues in GitHub. Any code you send should be formatted using `make gofmt`.

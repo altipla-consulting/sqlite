@@ -34,3 +34,11 @@ func Migrate(ctx context.Context, db *sqlx.DB, migrations []Migration) error {
 
 	return nil
 }
+
+func RunLastMigration(ctx context.Context, db *sqlx.DB, migrations []Migration) error {
+	if err := migrations[len(migrations)-1](ctx, db); err != nil {
+		return err
+	}
+
+	return nil
+}
