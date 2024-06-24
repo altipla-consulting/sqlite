@@ -25,7 +25,7 @@ func Migrate(ctx context.Context, db *sqlx.DB, migrations []Migration) error {
 	slog.Info("Running migrations", slog.Int64("from", version), slog.Int("to", len(migrations)))
 	for index, migration := range migrations[version:] {
 		newVersion := version + int64(index) + 1
-		slog.Info("Run migration", slog.Int64("version", newVersion))
+		slog.Info("Run migration", slog.Int("version", index+1))
 
 		if err := migration(ctx, db); err != nil {
 			return err
