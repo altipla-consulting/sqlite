@@ -24,12 +24,14 @@ func Migrate(ctx context.Context, db *sqlx.DB, migrations []Migration) error {
 
 	slog.Info("Running migrations", slog.Int64("from", version), slog.Int("to", len(migrations)))
 	for index, migration := range migrations[version:] {
-		slog.Info("Run migration", slog.Int("version", index+1))
+		newVersion := version + int64(index) + 1
+
+		slog.Info("Run migration", slog.Int64("version", newVersion))
 
 		if err := migration(ctx, db); err != nil {
 			return err
 		}
-		if _, err := db.ExecContext(ctx, fmt.Sprintf("PRAGMA user_version = %v", index+1)); err != nil {
+		if _, err := db.ExecContext(ctx, fmt.Sprintf("PRAGMA user_version = %v", newVersion)); err != nil {
 			return err
 		}
 	}
