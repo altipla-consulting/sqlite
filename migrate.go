@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/altipla-consulting/env"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -22,10 +23,14 @@ func Migrate(ctx context.Context, db *sqlx.DB, migrations []Migration) error {
 		return nil
 	}
 
-	slog.Info("Running migrations", slog.Int64("from", version), slog.Int("to", len(migrations)))
+	if !env.IsLocal() {
+		slog.Info("Running migrations", slog.Int64("from", version), slog.Int("to", len(migrations)))
+	}
 	for index, migration := range migrations[version:] {
 		newVersion := version + int64(index) + 1
-		slog.Info("Run migration", slog.Int64("version", newVersion))
+		if !env.IsLocal() {
+			slog.Info("Run migration", slog.Int64("version", newVersion))
+		}
 
 		if err := migration(ctx, db); err != nil {
 			return err
