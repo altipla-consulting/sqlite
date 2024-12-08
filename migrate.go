@@ -25,11 +25,9 @@ type Migration func(ctx context.Context, db *sqlx.DB) error
 
 // Migrate runs migrations from the list that have not been yet executed.
 func Migrate(ctx context.Context, db *sqlx.DB, migrations []Migration, options ...MigrateOption) error {
-	opts := migrateOptions{
-		logger: slog.Default(),
-	}
+	opts := new(migrateOptions)
 	for _, opt := range options {
-		opt(&opts)
+		opt(opts)
 	}
 
 	var version int64
@@ -63,11 +61,9 @@ func Migrate(ctx context.Context, db *sqlx.DB, migrations []Migration, options .
 
 // RerunLastMigration runs the last migration in the list.
 func RerunLastMigration(ctx context.Context, db *sqlx.DB, migrations []Migration, options ...MigrateOption) error {
-	opts := migrateOptions{
-		logger: slog.Default(),
-	}
+	opts := new(migrateOptions)
 	for _, opt := range options {
-		opt(&opts)
+		opt(opts)
 	}
 
 	if len(migrations) == 0 {
