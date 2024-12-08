@@ -5,15 +5,33 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/altipla-consulting/env"
 	"github.com/jmoiron/sqlx"
 )
+
+type MigrateOption func(opts *migrateOptions)
+
+type migrateOptions struct {
+	logger *slog.Logger
+}
+
+func WithMigrateLogger(logger *slog.Logger) MigrateOption {
+	return func(opts *migrateOptions) {
+		opts.logger = logger
+	}
+}
 
 // Migration is the function that will be run to execute the migration operation in the database.
 type Migration func(ctx context.Context, db *sqlx.DB) error
 
 // Migrate runs migrations from the list that have not been yet executed.
-func Migrate(ctx context.Context, db *sqlx.DB, migrations []Migration) error {
+func Migrate(ctx context.Context, db *sqlx.DB, migrations []Migration, options ...MigrateOption) error {
+	opts := migrateOptions{
+		logger: slog.Default(),
+	}
+	for _, opt := range options {
+		opt(&opts)
+	}
+
 	var version int64
 	if err := db.GetContext(ctx, &version, "PRAGMA user_version"); err != nil {
 		return err
@@ -23,13 +41,13 @@ func Migrate(ctx context.Context, db *sqlx.DB, migrations []Migration) error {
 		return nil
 	}
 
-	if !env.IsLocal() {
-		slog.Info("Running migrations", slog.Int64("from", version), slog.Int("to", len(migrations)))
+	if opts.logger != nil {
+		opts.logger.Info("Running migrations", slog.Int64("from", version), slog.Int("to", len(migrations)))
 	}
 	for index, migration := range migrations[version:] {
 		newVersion := version + int64(index) + 1
-		if !env.IsLocal() {
-			slog.Info("Run migration", slog.Int64("version", newVersion))
+		if opts.logger != nil {
+			opts.logger.Info("Run migration", slog.Int64("version", newVersion))
 		}
 
 		if err := migration(ctx, db); err != nil {
@@ -44,9 +62,18 @@ func Migrate(ctx context.Context, db *sqlx.DB, migrations []Migration) error {
 }
 
 // RerunLastMigration runs the last migration in the list.
-func RerunLastMigration(ctx context.Context, db *sqlx.DB, migrations []Migration) error {
+func RerunLastMigration(ctx context.Context, db *sqlx.DB, migrations []Migration, options ...MigrateOption) error {
+	opts := migrateOptions{
+		logger: slog.Default(),
+	}
+	for _, opt := range options {
+		opt(&opts)
+	}
+
 	if len(migrations) == 0 {
-		slog.Info("No migrations to run")
+		if opts.logger != nil {
+			opts.logger.Info("No migrations to run")
+		}
 		return nil
 	}
 
